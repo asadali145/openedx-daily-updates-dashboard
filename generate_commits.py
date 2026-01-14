@@ -368,8 +368,8 @@ document.addEventListener("DOMContentLoaded", function() {{
                     breakingClass = "breaking";
                 }}
                 htmlContent += `
-                    <div class="commit ${breakingClass}">
-                        ${breakingBadge}<b>${{c.message}}</b><br>
+                    <div class="commit ${{breakingClass}}">
+                        ${{breakingBadge}}<b>${{c.message}}</b><br>
                         👤 ${{c.author}} — ⏰ ${{hoursAgo(c.date)}}<br>
                         🔗 <a href="${{c.url}}" target="_blank">View commit</a>
                     </div>
