@@ -49,118 +49,43 @@ json_data = json.dumps(all_commits)
 
 # ----------- HTML OUTPUT --------------
 
-html_output = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Open Source Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Primer GitHub style -->
-<link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-
-<style>
-body {{
-  transition: background .3s, color .3s;
-}}
-.container {{
-  max-width: 1100px;
-  margin: auto;
-  padding: 20px;
-}}
-.commit {{
-  border: 1px solid #d0d7de;
-  border-radius: 10px;
-  padding: 10px 16px;
-  margin-bottom: 10px;
-}}
-.dark-mode {{
-  background: #0d1117;
-  color: #e6edf3;
-}}
-.commit.dark {{
-  border-color: #30363d;
-  background: #161b22;
-}}
-.controls input {{
-  margin-right: 8px;
-}}
-.chart-box {{
-  border: 1px solid #d0d7de;
-  padding: 10px;
-  border-radius: 10px;
-}}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<h1>🚀 Open Source Commits (last 2 days)</h1>
-
-<button onclick="toggleDark()" class="btn">🌙 Toggle Dark Mode</button>
-
-<hr>
-
-<div class="controls">
-  <input id="searchBox" placeholder="Search keyword…" oninput="render()">
-  <input id="authorBox" placeholder="Filter author…" oninput="render()">
-  <input id="repoBox" placeholder="Filter repo…" oninput="render()">
-</div>
-
-<h3>📊 Commit count by repository</h3>
-<div class="chart-box">
-  <canvas id="chart" height="80"></canvas>
-</div>
-
-<h3>🧭 Commits</h3>
-
-<div id="commits"></div>
-
-<p>
-Last generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}
-</p>
-
-</div>
-
+html_output += """
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-const commits = {json_data};
+const commits = """ + json_data + """;
 
-function hoursAgo(dateStr) {{
+function hoursAgo(dateStr) {
   const then = new Date(dateStr);
   const diff = (new Date() - then) / 3600000;
   if (diff < 1) return Math.round(diff * 60) + " minutes ago";
   return Math.round(diff) + " hours ago";
-}}
+}
 
-function toggleDark() {{
+function toggleDark() {
   document.body.classList.toggle("dark-mode");
-}}
+}
 
-function render() {{
+function render() {
   const search = document.getElementById("searchBox").value.toLowerCase();
   const author = document.getElementById("authorBox").value.toLowerCase();
   const repo = document.getElementById("repoBox").value.toLowerCase();
   let html = "";
 
-  const grouped = {{}};
+  const grouped = {};
 
-  commits.forEach(c => {{
+  commits.forEach(c => {
     if (search && !c.message.toLowerCase().includes(search)) return;
     if (author && !c.author.toLowerCase().includes(author)) return;
     if (repo && !c.repo.toLowerCase().includes(repo)) return;
 
     if (!grouped[c.repo]) grouped[c.repo] = [];
     grouped[c.repo].push(c);
-  }});
+  });
 
-  Object.keys(grouped).forEach(r => {{
-    html += `<h2>📦 ${r}</h2>`;
-    grouped[r].forEach(c => {{
+  Object.keys(grouped).forEach(r => {
+    html += "<h2>📦 " + r + "</h2>";
+    grouped[r].forEach(c => {
       html += `
         <div class="commit">
           <b>${c.message}</b><br>
@@ -168,38 +93,37 @@ function render() {{
           <a href="${c.url}">View commit</a>
         </div>
       `;
-    }});
-  }});
+    });
+  });
 
   document.getElementById("commits").innerHTML = html;
 
-  // update chart
   const repoCounts = Object.keys(grouped).map(k => grouped[k].length);
   const labels = Object.keys(grouped);
 
   chart.data.labels = labels;
   chart.data.datasets[0].data = repoCounts;
   chart.update();
-}}
+}
 
 const ctx = document.getElementById("chart");
-const chart = new Chart(ctx, {{
+const chart = new Chart(ctx, {
   type: 'bar',
-  data: {{
+  data: {
     labels: [],
-    datasets: [{{
+    datasets: [{
       label: "Commits",
       data: []
-    }}]
-  }},
-}});
+    }]
+  },
+});
 
 render();
 </script>
-
 </body>
 </html>
 """
+
 
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_output)
