@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, timezone
 import os
 import html
 import json
-import re
 
 # ---------------- CONFIG ----------------
 
@@ -12,14 +11,6 @@ REPOSITORIES = [
     "openedx/frontend-app-learning",
     "openedx/frontend-app-authoring",
     "openedx/frontend-app-discussions",
-    "openedx/XBlock",
-    "openedx/paragon",
-    "openedx/edx-celeryutils",
-    "openedx/frontend-base",
-    "openedx/frontend-app-ora",
-    "openedx/frontend-platform",
-    "openedx/frontend-plugin-framework",
-    "openedx/frontend-app-gradebook",
 ]
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -50,292 +41,160 @@ for repo in REPOSITORIES:
             "url": commit["html_url"],
         })
 
-
-# ---------------- BREAKING CHANGE ANALYSIS ----------------
-
-def analyze_breaking_changes(commits):
-
-    keyword_count = 0
-    conventional_count = 0
-    ai_count = 0
-
-    KEYWORDS = [
-        "breaking", "breaking change", "breaking change:", "bc:", "[breaking]",
-        "deprecated", "deprecat", "removed", "incompatible",
-        "major version", "migration required", "no longer supports"
-    ]
-    KEYWORDS = [k.lower() for k in KEYWORDS]
-
-    CONVENTIONAL_RE = re.compile(
-        r"^[a-z]+(\([^)]+\))?!:|BREAKING CHANGE:", re.IGNORECASE | re.MULTILINE
-    )
-
-    def keyword_method(msg):
-        msg_l = msg.lower()
-        for kw in KEYWORDS:
-            if kw in msg_l:
-                return True
-        return False
-
-    def conventional_method(msg, body=None):
-        if CONVENTIONAL_RE.search(msg):
-            return True
-        if body and "BREAKING CHANGE:" in body:
-            return True
-        return False
-
-    for commit in commits:
-        methods = []
-        msg = commit["message"]
-        body = None
-
-        if keyword_method(msg):
-            methods.append("keyword")
-            keyword_count += 1
-
-        if conventional_method(msg, body):
-            methods.append("conventional")
-            conventional_count += 1
-
-        commit["is_breaking"] = bool(methods)
-        commit["breaking_methods"] = methods
-
-    total = sum(1 for c in commits if c.get("is_breaking"))
-    print(
-        f"{total} commits flagged as breaking (Keyword: {keyword_count}, Conventional: {conventional_count}, AI: {ai_count})"
-    )
-
-
-analyze_breaking_changes(all_commits)
-
+# Sort newest first
 all_commits.sort(key=lambda c: c["date"], reverse=True)
 
 json_data = json.dumps(all_commits)
 
-# ---------------- HTML OUTPUT ----------------
+# ----------- HTML OUTPUT --------------
 
-html_output = f"""
+html_output = r"""
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Open edX Daily Commits Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+<meta charset="utf-8">
+<title>Open edX Recent Commits</title>
 
 <style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  margin: 20px;
+  color: #222;
+}
 
-body {{
-    transition: background .3s, color .3s;
-    background: #ffffff !important;
-    color: #24292f !important;
-}}
+.dark-mode {
+  background: #0f172a;
+  color: #e5e7eb;
+}
 
-body.dark-mode {{
-    background: #0d1117 !important;
-    color: #c9d1d9 !important;
-}}
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
 
-.container {{
-    max-width: 1100px;
-    margin: auto;
-    padding: 20px;
-}}
+input {
+  padding: 8px;
+  margin: 4px;
+}
 
-.commit {{
-    border: 1px solid #d0d7de;
-    border-radius: 10px;
-    padding: 10px 16px;
-    margin-bottom: 10px;
-    border-left: 6px solid transparent;
-    background: #ffffff !important;
-    color: #24292f !important;
-}}
+.commit {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 6px;
+}
 
-.commit.breaking {{
-    border-left: 6px solid #d73a49;
-    background: #fff5f5 !important;
-}}
+.dark-mode .commit {
+  border-color: #374151;
+}
 
-body.dark-mode .commit {{
-    border-color: #30363d;
-    background: #161b22 !important;
-    color: #c9d1d9 !important;
-}}
-
-body.dark-mode .commit.breaking {{
-    border-left: 6px solid #f85149;
-    background: #2a1618 !important;
-}}
-
-.breaking-badge {{
-    display: inline-block;
-    background: #d73a49;
-    color: #ffffff;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    margin-right: 8px;
-    font-weight: bold;
-}}
-
-body.dark-mode a {{
-    color: #58a6ff !important;
-}}
-
-.chart-box {{
-    border: 1px solid #d0d7de;
-    padding: 10px;
-    border-radius: 10px;
-}}
-
+.repo-title {
+  margin-top: 20px;
+}
 </style>
-</head>
-
-<body>
-
-<div class="container">
-
-<h1>🚀 Open edX Commits (last 2 days)</h1>
-
-<button onclick="toggleDark()" class="btn">🌙 Toggle Dark Mode</button>
-
-<hr>
-
-<div class="controls">
-    <input id="searchBox" placeholder="Search keyword…" oninput="render()">
-    <input id="authorBox" placeholder="Filter author…" oninput="render()">
-    <input id="repoBox" placeholder="Filter repo…" oninput="render()">
-
-    <label>
-        <input type="checkbox" id="breakingOnly" onchange="render()">
-        Show only breaking changes
-    </label>
-</div>
-
-<h3>📊 Commit count by repository</h3>
-<div class="chart-box">
-    <canvas id="chart" height="80"></canvas>
-</div>
-
-<h3>🧭 Commits</h3>
-<div id="commits"></div>
-
-<p>Last generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
-
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+</head>
+<body>
+<div class="container">
+
+<h1>📊 Open edX commits (last 2 days)</h1>
+
+<button onclick="toggleDark()">🌓 Toggle dark mode</button>
+
+<br><br>
+
+<input id="searchBox" placeholder="Search message…" oninput="render()">
+<input id="authorBox" placeholder="Filter author…" oninput="render()">
+<input id="repoBox" placeholder="Filter repo…" oninput="render()">
+
+<canvas id="chart" width="400" height="150"></canvas>
+
+<div id="commits"></div>
+
+</div>
+
 <script>
+const commits = """ + json_data + """;
 
-document.addEventListener("DOMContentLoaded", function() {{
+function hoursAgo(dateStr) {
+  const then = new Date(dateStr);
+  const diffMs = new Date() - then;
+  const diffHrs = diffMs / 3600000;
 
-    const commits = {json_data};
+  if (diffHrs < 1) return Math.round(diffHrs * 60) + " minutes ago";
+  if (diffHrs < 24) return Math.round(diffHrs) + " hours ago";
+  return Math.round(diffHrs / 24) + " days ago";
+}
 
-    // restore theme
-    const saved = localStorage.getItem("dark-mode-enabled");
-    if (saved === "true") {{
-        document.body.classList.add("dark-mode");
-        document.documentElement.setAttribute("data-color-mode", "dark");
-    }}
+function toggleDark() {
+  document.body.classList.toggle("dark-mode");
+}
 
-    window.toggleDark = function() {{
-        document.body.classList.toggle("dark-mode");
-        const isDark = document.body.classList.contains("dark-mode");
-        document.documentElement.setAttribute("data-color-mode", isDark ? "dark" : "light");
-        localStorage.setItem("dark-mode-enabled", isDark);
-        render();
-    }}
+function render() {
+  const searchBox = document.getElementById("searchBox");
+  const authorBox = document.getElementById("authorBox");
+  const repoBox = document.getElementById("repoBox");
 
-    function hoursAgo(dateStr) {{
-        const then = new Date(dateStr);
-        const diff = (new Date() - then) / 3600000;
-        if (diff < 1) return Math.round(diff * 60) + " minutes ago";
-        return Math.round(diff) + " hours ago";
-    }}
+  const search = searchBox ? searchBox.value.toLowerCase() : "";
+  const author = authorBox ? authorBox.value.toLowerCase() : "";
+  const repo = repoBox ? repoBox.value.toLowerCase() : "";
 
-    const ctx = document.getElementById("chart");
-    const chart = new Chart(ctx, {{
-        type: "bar",
-        data: {{
-            labels: [],
-            datasets: [{{
-                label: "Commits",
-                data: []
-            }}]
-        }},
-    }});
+  const grouped = {};
 
-    window.render = function() {{
+  commits.forEach(c => {
+    if (search && !c.message.toLowerCase().includes(search)) return;
+    if (author && !c.author.toLowerCase().includes(author)) return;
+    if (repo && !c.repo.toLowerCase().includes(repo)) return;
 
-        const search = (document.getElementById("searchBox").value || "").toLowerCase();
-        const author = (document.getElementById("authorBox").value || "").toLowerCase();
-        const repo = (document.getElementById("repoBox").value || "").toLowerCase();
-        const breaking = document.getElementById("breakingOnly").checked;
+    if (!grouped[c.repo]) grouped[c.repo] = [];
+    grouped[c.repo].push(c);
+  });
 
-        let grouped = {{}};
-        let html = "";
+  let html = "";
 
-        commits.forEach(c => {{
-            if (search && !c.message.toLowerCase().includes(search)) return;
-            if (author && !c.author.toLowerCase().includes(author)) return;
-            if (repo && !c.repo.toLowerCase().includes(repo)) return;
-            if (breaking && !c.is_breaking) return;
+  Object.keys(grouped).forEach(r => {
+    html += "<h2 class='repo-title'>📦 " + r + "</h2>";
 
-            if (!grouped[c.repo]) grouped[c.repo] = [];
-            grouped[c.repo].push(c);
-        }});
+    grouped[r].forEach(c => {
+      html += `
+        <div class="commit">
+          <b>${c.message}</b><br>
+          👤 ${c.author} — ⏰ ${hoursAgo(c.date)}<br>
+          🔗 <a href="${c.url}" target="_blank">View commit</a>
+        </div>
+      `;
+    });
+  });
 
-        Object.keys(grouped).forEach(r => {{
-            html += "<h2>📦 " + r + "</h2>";
-            grouped[r].forEach(c => {{
+  document.getElementById("commits").innerHTML = html;
 
-                let badge = "";
-                let cls = "";
+  // ---- chart ----
+  const labels = Object.keys(grouped);
+  const repoCounts = labels.map(k => grouped[k].length);
 
-                if (c.is_breaking) {{
-                    badge = '<span class="breaking-badge">⚠ BREAKING</span>';
-                    cls = "breaking";
-                }}
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = repoCounts;
+  chart.update();
+}
 
-                html += `
-                    <div class="commit ${cls}">
-                        ${badge}<b>${c.message}</b><br>
-                        👤 ${c.author} — ⏰ ${hoursAgo(c.date)}<br>
-                        🔗 <a href="${c.url}" target="_blank">View commit</a>
-                    </div>
-                `;
-            }});
-        }});
+document.addEventListener("DOMContentLoaded", function () {
+  render();
+});
 
-        document.getElementById("commits").innerHTML = html;
-
-        const repoCounts = Object.keys(grouped).map(k => grouped[k].length);
-        const labels = Object.keys(grouped);
-
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = repoCounts;
-
-        // chart dark mode
-        if (document.body.classList.contains("dark-mode")) {{
-            chart.options.scales = {{
-                x: {{ ticks: {{ color: "#c9d1d9" }} }},
-                y: {{ ticks: {{ color: "#c9d1d9" }} }}
-            }};
-        }} else {{
-            chart.options.scales = {{
-                x: {{ ticks: {{ color: "#24292f" }} }},
-                y: {{ ticks: {{ color: "#24292f" }} }}
-            }};
-        }}
-
-        chart.update();
-    }}
-
-    render();
-}});
+const ctx = document.getElementById("chart");
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [{
+      label: "Commits (last 2 days)",
+      data: []
+    }]
+  }
+});
 </script>
 
 </body>
