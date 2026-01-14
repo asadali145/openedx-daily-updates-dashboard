@@ -11,6 +11,14 @@ REPOSITORIES = [
     "openedx/frontend-app-learning",
     "openedx/frontend-app-authoring",
     "openedx/frontend-app-discussions",
+    "openedx/XBlock",
+    "openedx/paragon",
+    "openedx/edx-celeryutils",
+    "openedx/frontend-base",
+    "openedx/frontend-app-ora",
+    "openedx/frontend-platform",
+    "openedx/frontend-plugin-framework",
+    "openedx/frontend-app-gradebook",
 ]
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -83,7 +91,7 @@ body {{
     background: #0d1117;
     color: #e6edf3;
 }}
-.controls input {{
+.controls input, .controls select {{
     margin-right: 8px;
     padding: 6px 10px;
     margin-bottom: 8px;
@@ -112,7 +120,13 @@ body {{
 <div class="controls">
     <input id="searchBox" placeholder="Search keyword…" oninput="render()">
     <input id="authorBox" placeholder="Filter author…" oninput="render()">
-    <input id="repoBox" placeholder="Filter repo…" oninput="render()">
+    <!-- dropdown for repositories -->
+    <select id="repoSelect" onchange="render()">
+        <option value="">All repos</option>
+        {"".join(f'<option value="{html.escape(repo)}">{html.escape(repo)}</option>' for repo in REPOSITORIES)}
+    </select>
+    <!-- keep the free-text repo filter -->
+    <input id="repoBox" placeholder="Filter repo (text)…" oninput="render()">
 </div>
 
 <h3>📊 Commit count by repository</h3>
@@ -162,10 +176,12 @@ document.addEventListener("DOMContentLoaded", function() {{
         const searchInput = document.getElementById("searchBox");
         const authorInput = document.getElementById("authorBox");
         const repoInput = document.getElementById("repoBox");
+        const repoSelect = document.getElementById("repoSelect");
 
         const search = searchInput ? searchInput.value.toLowerCase() : "";
         const author = authorInput ? authorInput.value.toLowerCase() : "";
-        const repo = repoInput ? repoInput.value.toLowerCase() : "";
+        const repoText = repoInput ? repoInput.value.toLowerCase() : "";
+        const repoSelected = repoSelect ? repoSelect.value : "";
 
         let htmlContent = "";
         const grouped = {{}};
@@ -173,7 +189,12 @@ document.addEventListener("DOMContentLoaded", function() {{
         commits.forEach(c => {{
             if (search && !c.message.toLowerCase().includes(search)) return;
             if (author && !c.author.toLowerCase().includes(author)) return;
-            if (repo && !c.repo.toLowerCase().includes(repo)) return;
+
+            // dropdown filter (exact match)
+            if (repoSelected && c.repo !== repoSelected) return;
+
+            // free-text repo filter (substring match)
+            if (repoText && !c.repo.toLowerCase().includes(repoText)) return;
 
             if (!grouped[c.repo]) grouped[c.repo] = [];
             grouped[c.repo].push(c);
