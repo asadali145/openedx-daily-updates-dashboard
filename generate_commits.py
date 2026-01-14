@@ -47,37 +47,81 @@ all_commits.sort(key=lambda c: c["date"], reverse=True)
 
 html_output = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Recent Commits Dashboard</title>
+<title>Open Source Daily Commits Dashboard</title>
+
+<!-- GitHub Primer CSS -->
+<link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; }
-h1 { color: #222; }
-.commit { border-bottom: 1px solid #ddd; padding: 10px 0; }
-.repo { font-weight: bold; }
-.date { color: #555; }
+.container-lg {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.commit-card {
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: #ffffff;
+}
+.repo-badge {
+  font-weight: 600;
+  color: #0969da;
+}
+.commit-message {
+  font-size: 16px;
+  margin: 6px 0;
+}
+.meta {
+  font-size: 13px;
+  color: #57606a;
+}
+.footer-note {
+  margin-top: 30px;
+  color: #57606a;
+  font-size: 12px;
+}
 </style>
 </head>
-<body>
-<h1>🚀 Commits in the last 24 hours</h1>
-<p>Generated automatically via GitHub Actions.</p>
+
+<body class="color-bg-subtle">
+
+<div class="container-lg">
+
+<h1 class="h1">🚀 Open Source Commits (last 24 hours)</h1>
+<p class="color-fg-muted">Automatically generated via GitHub Actions & GitHub Pages</p>
+
+<hr>
 """
+
 
 for c in all_commits:
     html_output += f"""
-    <div class="commit">
-        <div class="repo">[{html.escape(c['repo'])}]</div>
-        <div class="msg">{html.escape(c['message'])}</div>
+    <div class="commit-card">
+        <div class="repo-badge">{html.escape(c['repo'])}</div>
+        <div class="commit-message">{html.escape(c['message'])}</div>
         <div class="meta">
-            Author: {html.escape(c['author'])}<br>
-            Date: {html.escape(c['date'])}<br>
-            <a href="{c['url']}">View commit</a>
+            👤 {html.escape(c['author'])}<br>
+            🕒 {html.escape(c['date'])}<br>
+            🔗 <a href="{c['url']}">View commit</a>
         </div>
     </div>
     """
 
 html_output += """
+<hr>
+<div class="footer-note">
+This page refreshes automatically once per day using GitHub Actions.<br>
+Last generated: """ + datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC") + """
+</div>
+
+</div>
 </body>
 </html>
 """
