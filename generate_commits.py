@@ -21,7 +21,7 @@ headers = {}
 if GITHUB_TOKEN:
     headers["Authorization"] = f"token {GITHUB_TOKEN}"
 
-since_time = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+since_time = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
 
 all_commits = []
 
@@ -94,7 +94,7 @@ html_output = """
 
 <div class="container-lg">
 
-<h1 class="h1">🚀 Open Source Commits (last 24 hours)</h1>
+<h1 class="h1">🚀 Open Source Commits (last 2 days)</h1>
 <p class="color-fg-muted">Automatically generated via GitHub Actions & GitHub Pages</p>
 
 <hr>
