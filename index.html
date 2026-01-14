@@ -1,113 +1,73 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Open Source Daily Commits Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- GitHub Primer CSS -->
-<link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+<script>
+const commits = [{"repo": "openedx/edx-platform", "message": "Merge pull request #37878 from openedx/feanil/update_readme_python_version", "author": "Feanil Patel", "date": "2026-01-13T21:38:20Z", "url": "https://github.com/openedx/edx-platform/commit/aea900061aaa8a098801d1b01484f999ee9b355a"}, {"repo": "openedx/edx-platform", "message": "docs: Apply suggestion from @kdmccormick", "author": "Feanil Patel", "date": "2026-01-13T19:17:59Z", "url": "https://github.com/openedx/edx-platform/commit/6062c04e8aefb48fe3d5a4d44b2294e0d7169d86"}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37879 from irfanuddinahmad/iahmad/ENT-10552", "author": "irfanuddinahmad", "date": "2026-01-13T16:40:40Z", "url": "https://github.com/openedx/edx-platform/commit/e6deac0cf12226c0b8d744ad17395373cfe0de03"}, {"repo": "openedx/edx-platform", "message": "chore: updated version of enterprise-integrated-channels", "author": "irfanuddinahmad", "date": "2026-01-13T15:56:17Z", "url": "https://github.com/openedx/edx-platform/commit/6e59e0f248a04b25f978243cfcc681cbab4a9805"}, {"repo": "openedx/edx-platform", "message": "Removed DEFAULT_HASHING_ALGORITHM from lms (#37820)", "author": "jawad khan", "date": "2026-01-13T13:13:52Z", "url": "https://github.com/openedx/edx-platform/commit/99e7492b5e5a0b65f739f02119a27c0ae922567b"}, {"repo": "openedx/edx-platform", "message": "feat: added new email template for batched email notification (#37844)", "author": "Ahtisham Shahid", "date": "2026-01-13T05:49:12Z", "url": "https://github.com/openedx/edx-platform/commit/14e508ea9fbd5e4c37385341fd9d756c630e0f27"}, {"repo": "openedx/frontend-app-authoring", "message": "feat: Make sections/subsections/units selectable in course outline [FC-0114] (#2732)", "author": "Chris Ch\u00e1vez", "date": "2026-01-13T02:12:46Z", "url": "https://github.com/openedx/frontend-app-authoring/commit/4cda17e04635957d685746c2af39dddeaa7b48af"}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37861 from openedx/dependabot/github_actions/actions/cache-5", "author": "Feanil Patel", "date": "2026-01-12T21:22:45Z", "url": "https://github.com/openedx/edx-platform/commit/bfc5fd5f944b11cf0196c23e54e19e373d6b869a"}, {"repo": "openedx/edx-platform", "message": "docs: Update the supported python version in the README.", "author": "Feanil Patel", "date": "2026-01-12T20:58:53Z", "url": "https://github.com/openedx/edx-platform/commit/d5cb793f8bdea4b6fff38a6aff06eca0188856e2"}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37860 from openedx/dependabot/github_actions/actions/download-artifact-7", "author": "Feanil Patel", "date": "2026-01-12T20:37:29Z", "url": "https://github.com/openedx/edx-platform/commit/88ee0b11a5e4685fcb9bc5f41ed0edf2edb7dad1"}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37862 from openedx/dependabot/github_actions/actions/upload-artifact-6", "author": "Feanil Patel", "date": "2026-01-12T20:36:43Z", "url": "https://github.com/openedx/edx-platform/commit/24b28d181178b7e5ae676d30241d75bbb64f8aad"}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37863 from openedx/dependabot/github_actions/peter-evans/create-pull-request-8", "author": "Feanil Patel", "date": "2026-01-12T20:35:55Z", "url": "https://github.com/openedx/edx-platform/commit/7f6c678ad478d44011d32c5ef1f09b7e87064048"}, {"repo": "openedx/frontend-app-authoring", "message": "chore(deps): update dependency @types/lodash to v4.17.23 (#2818)", "author": "renovate[bot]", "date": "2026-01-12T17:47:14Z", "url": "https://github.com/openedx/frontend-app-authoring/commit/969f7a285803c83066799696f5dfcdc2ba4e4a01"}, {"repo": "openedx/edx-platform", "message": "docs: Remove some code block annotations that were failing.", "author": "Feanil Patel", "date": "2026-01-12T16:11:48Z", "url": "https://github.com/openedx/edx-platform/commit/fa64270df4d3abf887e2101746f60ae41f9b5f3e"}, {"repo": "openedx/edx-platform", "message": "docs: Add the top-level decision records to the docs site.", "author": "Feanil Patel", "date": "2026-01-12T16:11:12Z", "url": "https://github.com/openedx/edx-platform/commit/35fab7bbb66f03f95f5fcc191d9bdb3e0e4c2396"}, {"repo": "openedx/edx-platform", "message": "docs: Ignore a venv generated during docs build.", "author": "Feanil Patel", "date": "2026-01-12T16:09:39Z", "url": "https://github.com/openedx/edx-platform/commit/02db4874f01f74fe5f2f227a28d15cfe600b7dc6"}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37857 from openedx/feanil/fix_docs_build", "author": "Feanil Patel", "date": "2026-01-12T15:52:45Z", "url": "https://github.com/openedx/edx-platform/commit/615f86035c612bccde474878dd372f3a5090c42d"}];
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-.container-lg {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
+function hoursAgo(dateStr) {
+  const then = new Date(dateStr);
+  const diff = (new Date() - then) / 3600000;
+  if (diff < 1) return Math.round(diff * 60) + " minutes ago";
+  return Math.round(diff) + " hours ago";
 }
-.commit-card {
-  border: 1px solid #d0d7de;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #ffffff;
-}
-.repo-badge {
-  font-weight: 600;
-  color: #0969da;
-}
-.commit-message {
-  font-size: 16px;
-  margin: 6px 0;
-}
-.meta {
-  font-size: 13px;
-  color: #57606a;
-}
-.footer-note {
-  margin-top: 30px;
-  color: #57606a;
-  font-size: 12px;
-}
-</style>
-</head>
 
-<body class="color-bg-subtle">
+function toggleDark() {
+  document.body.classList.toggle("dark-mode");
+}
 
-<div class="container-lg">
+function render() {
+  const search = document.getElementById("searchBox").value.toLowerCase();
+  const author = document.getElementById("authorBox").value.toLowerCase();
+  const repo = document.getElementById("repoBox").value.toLowerCase();
+  let html = "";
 
-<h1 class="h1">🚀 Open Source Commits (last 24 hours)</h1>
-<p class="color-fg-muted">Automatically generated via GitHub Actions & GitHub Pages</p>
+  const grouped = {};
 
-<hr>
+  commits.forEach(c => {
+    if (search && !c.message.toLowerCase().includes(search)) return;
+    if (author && !c.author.toLowerCase().includes(author)) return;
+    if (repo && !c.repo.toLowerCase().includes(repo)) return;
 
-    <div class="commit-card">
-        <div class="repo-badge">openedx/edx-platform</div>
-        <div class="commit-message">Merge pull request #37878 from openedx/feanil/update_readme_python_version</div>
-        <div class="meta">
-            👤 Feanil Patel<br>
-            🕒 2026-01-13T21:38:20Z<br>
-            🔗 <a href="https://github.com/openedx/edx-platform/commit/aea900061aaa8a098801d1b01484f999ee9b355a">View commit</a>
+    if (!grouped[c.repo]) grouped[c.repo] = [];
+    grouped[c.repo].push(c);
+  });
+
+  Object.keys(grouped).forEach(r => {
+    html += "<h2>📦 " + r + "</h2>";
+    grouped[r].forEach(c => {
+      html += `
+        <div class="commit">
+          <b>${c.message}</b><br>
+          👤 ${c.author} — ⏰ ${hoursAgo(c.date)}<br>
+          <a href="${c.url}">View commit</a>
         </div>
-    </div>
-    
-    <div class="commit-card">
-        <div class="repo-badge">openedx/edx-platform</div>
-        <div class="commit-message">docs: Apply suggestion from @kdmccormick</div>
-        <div class="meta">
-            👤 Feanil Patel<br>
-            🕒 2026-01-13T19:17:59Z<br>
-            🔗 <a href="https://github.com/openedx/edx-platform/commit/6062c04e8aefb48fe3d5a4d44b2294e0d7169d86">View commit</a>
-        </div>
-    </div>
-    
-    <div class="commit-card">
-        <div class="repo-badge">openedx/edx-platform</div>
-        <div class="commit-message">Merge pull request #37879 from irfanuddinahmad/iahmad/ENT-10552</div>
-        <div class="meta">
-            👤 irfanuddinahmad<br>
-            🕒 2026-01-13T16:40:40Z<br>
-            🔗 <a href="https://github.com/openedx/edx-platform/commit/e6deac0cf12226c0b8d744ad17395373cfe0de03">View commit</a>
-        </div>
-    </div>
-    
-    <div class="commit-card">
-        <div class="repo-badge">openedx/edx-platform</div>
-        <div class="commit-message">chore: updated version of enterprise-integrated-channels</div>
-        <div class="meta">
-            👤 irfanuddinahmad<br>
-            🕒 2026-01-13T15:56:17Z<br>
-            🔗 <a href="https://github.com/openedx/edx-platform/commit/6e59e0f248a04b25f978243cfcc681cbab4a9805">View commit</a>
-        </div>
-    </div>
-    
-    <div class="commit-card">
-        <div class="repo-badge">openedx/edx-platform</div>
-        <div class="commit-message">Removed DEFAULT_HASHING_ALGORITHM from lms (#37820)</div>
-        <div class="meta">
-            👤 jawad khan<br>
-            🕒 2026-01-13T13:13:52Z<br>
-            🔗 <a href="https://github.com/openedx/edx-platform/commit/99e7492b5e5a0b65f739f02119a27c0ae922567b">View commit</a>
-        </div>
-    </div>
-    
-<hr>
-<div class="footer-note">
-This page refreshes automatically once per day using GitHub Actions.<br>
-Last generated: 2026-01-14 08:44:00 UTC
-</div>
+      `;
+    });
+  });
 
-</div>
+  document.getElementById("commits").innerHTML = html;
+
+  const repoCounts = Object.keys(grouped).map(k => grouped[k].length);
+  const labels = Object.keys(grouped);
+
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = repoCounts;
+  chart.update();
+}
+
+const ctx = document.getElementById("chart");
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [{
+      label: "Commits",
+      data: []
+    }]
+  },
+});
+
+render();
+</script>
 </body>
 </html>

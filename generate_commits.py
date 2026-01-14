@@ -2,6 +2,7 @@ import requests
 from datetime import datetime, timedelta, timezone
 import os
 import html
+import json
 
 # ---------------- CONFIG ----------------
 
@@ -12,7 +13,6 @@ REPOSITORIES = [
     "openedx/frontend-app-discussions",
 ]
 
-# GitHub token from environment (set in GitHub Actions)
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # ----------------------------------------
@@ -21,7 +21,7 @@ headers = {}
 if GITHUB_TOKEN:
     headers["Authorization"] = f"token {GITHUB_TOKEN}"
 
-since_time = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+since_time = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
 
 all_commits = []
 
@@ -41,92 +41,91 @@ for repo in REPOSITORIES:
             "url": commit["html_url"],
         })
 
+# Sort newest first
 all_commits.sort(key=lambda c: c["date"], reverse=True)
+
+# JSON data for browser JS
+json_data = json.dumps(all_commits)
 
 # ----------- HTML OUTPUT --------------
 
 html_output = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Open Source Daily Commits Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- GitHub Primer CSS -->
-<link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+<script>
+const commits = """ + json_data + """;
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-.container-lg {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
+function hoursAgo(dateStr) {
+  const then = new Date(dateStr);
+  const diff = (new Date() - then) / 3600000;
+  if (diff < 1) return Math.round(diff * 60) + " minutes ago";
+  return Math.round(diff) + " hours ago";
 }
-.commit-card {
-  border: 1px solid #d0d7de;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #ffffff;
+
+function toggleDark() {
+  document.body.classList.toggle("dark-mode");
 }
-.repo-badge {
-  font-weight: 600;
-  color: #0969da;
-}
-.commit-message {
-  font-size: 16px;
-  margin: 6px 0;
-}
-.meta {
-  font-size: 13px;
-  color: #57606a;
-}
-.footer-note {
-  margin-top: 30px;
-  color: #57606a;
-  font-size: 12px;
-}
-</style>
-</head>
 
-<body class="color-bg-subtle">
+function render() {
+  const search = document.getElementById("searchBox").value.toLowerCase();
+  const author = document.getElementById("authorBox").value.toLowerCase();
+  const repo = document.getElementById("repoBox").value.toLowerCase();
+  let html = "";
 
-<div class="container-lg">
+  const grouped = {};
 
-<h1 class="h1">🚀 Open Source Commits (last 24 hours)</h1>
-<p class="color-fg-muted">Automatically generated via GitHub Actions & GitHub Pages</p>
+  commits.forEach(c => {
+    if (search && !c.message.toLowerCase().includes(search)) return;
+    if (author && !c.author.toLowerCase().includes(author)) return;
+    if (repo && !c.repo.toLowerCase().includes(repo)) return;
 
-<hr>
-"""
+    if (!grouped[c.repo]) grouped[c.repo] = [];
+    grouped[c.repo].push(c);
+  });
 
-
-for c in all_commits:
-    html_output += f"""
-    <div class="commit-card">
-        <div class="repo-badge">{html.escape(c['repo'])}</div>
-        <div class="commit-message">{html.escape(c['message'])}</div>
-        <div class="meta">
-            👤 {html.escape(c['author'])}<br>
-            🕒 {html.escape(c['date'])}<br>
-            🔗 <a href="{c['url']}">View commit</a>
+  Object.keys(grouped).forEach(r => {
+    html += "<h2>📦 " + r + "</h2>";
+    grouped[r].forEach(c => {
+      html += `
+        <div class="commit">
+          <b>${c.message}</b><br>
+          👤 ${c.author} — ⏰ ${hoursAgo(c.date)}<br>
+          <a href="${c.url}">View commit</a>
         </div>
-    </div>
-    """
+      `;
+    });
+  });
 
-html_output += """
-<hr>
-<div class="footer-note">
-This page refreshes automatically once per day using GitHub Actions.<br>
-Last generated: """ + datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC") + """
-</div>
+  document.getElementById("commits").innerHTML = html;
 
-</div>
+  const repoCounts = Object.keys(grouped).map(k => grouped[k].length);
+  const labels = Object.keys(grouped);
+
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = repoCounts;
+  chart.update();
+}
+
+const ctx = document.getElementById("chart");
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [{
+      label: "Commits",
+      data: []
+    }]
+  },
+});
+
+render();
+</script>
 </body>
 </html>
 """
 
+
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_output)
 
-print("index.html generated successfully 🎉")
+print("Dashboard generated 🎉")
