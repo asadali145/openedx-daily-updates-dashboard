@@ -120,12 +120,11 @@ body {{
 <div class="controls">
     <input id="searchBox" placeholder="Search keyword…" oninput="render()">
     <input id="authorBox" placeholder="Filter author…" oninput="render()">
-    <!-- dropdown for repositories -->
-    <select id="repoSelect" onchange="render()">
+    <!-- multi-select for repositories -->
+    <select id="repoSelect" multiple size="4" style="vertical-align:middle; min-width:220px;" onchange="render()">
         <option value="">All repos</option>
         {"".join(f'<option value="{html.escape(repo)}">{html.escape(repo)}</option>' for repo in REPOSITORIES)}
     </select>
-    <!-- keep the free-text repo filter -->
     <input id="repoBox" placeholder="Filter repo (text)…" oninput="render()">
 </div>
 
@@ -181,17 +180,21 @@ document.addEventListener("DOMContentLoaded", function() {{
         const search = searchInput ? searchInput.value.toLowerCase() : "";
         const author = authorInput ? authorInput.value.toLowerCase() : "";
         const repoText = repoInput ? repoInput.value.toLowerCase() : "";
-        const repoSelected = repoSelect ? repoSelect.value : "";
+
+        // Get selected repos (ignore "All repos" if nothing else selected)
+        let selectedRepos = Array.from(repoSelect.selectedOptions)
+            .map(opt => opt.value)
+            .filter(v => v); // remove empty string
 
         let htmlContent = "";
-        const grouped = {{}};
+        const grouped = {};
 
         commits.forEach(c => {{
             if (search && !c.message.toLowerCase().includes(search)) return;
             if (author && !c.author.toLowerCase().includes(author)) return;
 
-            // dropdown filter (exact match)
-            if (repoSelected && c.repo !== repoSelected) return;
+            // multi-select filter (exact match, allow multiple)
+            if (selectedRepos.length && !selectedRepos.includes(c.repo)) return;
 
             // free-text repo filter (substring match)
             if (repoText && !c.repo.toLowerCase().includes(repoText)) return;
