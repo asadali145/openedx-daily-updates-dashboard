@@ -4,7 +4,6 @@ import os
 import html
 import json
 import re
-import time
 
 # ---------------- CONFIG ----------------
 
@@ -51,18 +50,15 @@ for repo in REPOSITORIES:
             "url": commit["html_url"],
         })
 
+
+# ---------------- BREAKING CHANGE ANALYSIS ----------------
+
 def analyze_breaking_changes(commits):
-    """
-    For each commit, set:
-      - commit["is_breaking"]: True/False
-      - commit["breaking_methods"]: list of method names that flagged it
-    Returns summary counts for logging.
-    """
+
     keyword_count = 0
     conventional_count = 0
     ai_count = 0
 
-    # --- Keyword-based analysis ---
     KEYWORDS = [
         "breaking", "breaking change", "breaking change:", "bc:", "[breaking]",
         "deprecated", "deprecat", "removed", "incompatible",
@@ -70,20 +66,9 @@ def analyze_breaking_changes(commits):
     ]
     KEYWORDS = [k.lower() for k in KEYWORDS]
 
-    # --- Conventional Commits regex ---
     CONVENTIONAL_RE = re.compile(
         r"^[a-z]+(\([^)]+\))?!:|BREAKING CHANGE:", re.IGNORECASE | re.MULTILINE
     )
-
-    # --- GitHub Models API setup ---
-    GITHUB_MODELS_API = "https://models.inference.ai.azure.com/chat/completions"
-    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-    AI_HEADERS = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
-        "Content-Type": "application/json"
-    }
-    AI_MODEL = "gpt-4o-mini"
-    AI_PROMPT = "Analyze if this commit might contain breaking changes. Reply with only 'yes' or 'no'."
 
     def keyword_method(msg):
         msg_l = msg.lower()
@@ -93,72 +78,24 @@ def analyze_breaking_changes(commits):
         return False
 
     def conventional_method(msg, body=None):
-        # Check for ! in type (e.g., feat!:) or BREAKING CHANGE: in body
         if CONVENTIONAL_RE.search(msg):
             return True
         if body and "BREAKING CHANGE:" in body:
             return True
         return False
 
-    def ai_method(msg, body=None):
-        # Use GPT-4o-mini via GitHub Models API (free tier)
-        if not GITHUB_TOKEN:
-            return False  # Can't call API without token
-        try:
-            payload = {
-                "model": AI_MODEL,
-                "messages": [
-                    {"role": "system", "content": "You are a commit message analyzer."},
-                    {"role": "user", "content": f"{AI_PROMPT}\nCommit message: {msg}"}
-                ],
-                "max_tokens": 3,
-                "temperature": 0.0,
-            }
-            resp = requests.post(
-                GITHUB_MODELS_API,
-                headers=AI_HEADERS,
-                json=payload,
-                timeout=1.0
-            )
-            if resp.status_code != 200:
-                return False
-            data = resp.json()
-            answer = ""
-            # Try to extract the model's reply
-            if "choices" in data and data["choices"]:
-                answer = data["choices"][0].get("message", {}).get("content", "")
-            if not answer:
-                answer = resp.text
-            if "yes" in answer.lower():
-                return True
-        except Exception:
-            # On error (timeout, rate limit, etc), skip AI
-            return False
-        return False
-
     for commit in commits:
         methods = []
         msg = commit["message"]
-        body = None  # Not available in current data, could be extended
+        body = None
 
-        # a) Keyword-based
         if keyword_method(msg):
             methods.append("keyword")
             keyword_count += 1
 
-        # b) Conventional Commits
         if conventional_method(msg, body):
-            if "conventional" not in methods:
-                methods.append("conventional")
-                conventional_count += 1
-
-        # c) AI (only if not already flagged)
-        ai_flagged = False
-        if GITHUB_TOKEN and not methods:
-            ai_flagged = ai_method(msg, body)
-            if ai_flagged:
-                methods.append("ai")
-                ai_count += 1
+            methods.append("conventional")
+            conventional_count += 1
 
         commit["is_breaking"] = bool(methods)
         commit["breaking_methods"] = methods
@@ -168,16 +105,14 @@ def analyze_breaking_changes(commits):
         f"{total} commits flagged as breaking (Keyword: {keyword_count}, Conventional: {conventional_count}, AI: {ai_count})"
     )
 
-# --- Breaking change analysis ---
+
 analyze_breaking_changes(all_commits)
 
-# Sort newest first
 all_commits.sort(key=lambda c: c["date"], reverse=True)
 
-# JSON data for browser JS
 json_data = json.dumps(all_commits)
 
-# ----------- HTML OUTPUT --------------
+# ---------------- HTML OUTPUT ----------------
 
 html_output = f"""
 <!DOCTYPE html>
@@ -187,99 +122,74 @@ html_output = f"""
 <title>Open edX Daily Commits Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Primer GitHub style -->
 <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
 
 <style>
+
 body {{
     transition: background .3s, color .3s;
-    background: #fff;
-    color: #24292f;
+    background: #ffffff !important;
+    color: #24292f !important;
 }}
+
 body.dark-mode {{
-    background: #0d1117;
-    color: #c9d1d9;
+    background: #0d1117 !important;
+    color: #c9d1d9 !important;
 }}
+
 .container {{
     max-width: 1100px;
     margin: auto;
     padding: 20px;
 }}
+
 .commit {{
     border: 1px solid #d0d7de;
     border-radius: 10px;
     padding: 10px 16px;
     margin-bottom: 10px;
     border-left: 6px solid transparent;
-    background: #fff;
-    color: #24292f;
+    background: #ffffff !important;
+    color: #24292f !important;
 }}
+
 .commit.breaking {{
     border-left: 6px solid #d73a49;
-    background: #fff5f5;
+    background: #fff5f5 !important;
 }}
+
 body.dark-mode .commit {{
     border-color: #30363d;
-    background: #161b22;
-    color: #c9d1d9;
+    background: #161b22 !important;
+    color: #c9d1d9 !important;
 }}
+
 body.dark-mode .commit.breaking {{
     border-left: 6px solid #f85149;
-    background: #2a1618;
-    color: #c9d1d9;
+    background: #2a1618 !important;
 }}
+
 .breaking-badge {{
     display: inline-block;
     background: #d73a49;
-    color: #fff;
+    color: #ffffff;
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 12px;
     margin-right: 8px;
-    vertical-align: middle;
     font-weight: bold;
-    letter-spacing: 0.5px;
 }}
-.controls input, .controls select {{
-    margin-right: 8px;
-    padding: 6px 10px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    border: 1px solid #d0d7de;
-    background: #fff;
-    color: #24292f;
+
+body.dark-mode a {{
+    color: #58a6ff !important;
 }}
-body.dark-mode .controls input,
-body.dark-mode .controls select {{
-    background: #161b22;
-    color: #c9d1d9;
-    border: 1px solid #30363d;
-}}
-.controls label {{
-    margin-right: 12px;
-    font-weight: normal;
-    font-size: 15px;
-    vertical-align: middle;
-}}
+
 .chart-box {{
     border: 1px solid #d0d7de;
     padding: 10px;
     border-radius: 10px;
-    margin-bottom: 20px;
-    background: #fff;
-    color: #24292f;
 }}
-body.dark-mode .chart-box {{
-    border-color: #30363d;
-    background: #161b22;
-    color: #c9d1d9;
-}}
-a {{
-    color: #0969da;
-}}
-body.dark-mode a {{
-    color: #58a6ff;
-}}
+
 </style>
 </head>
 
@@ -296,13 +206,10 @@ body.dark-mode a {{
 <div class="controls">
     <input id="searchBox" placeholder="Search keyword…" oninput="render()">
     <input id="authorBox" placeholder="Filter author…" oninput="render()">
-    <select id="repoSelect" multiple size="4" style="vertical-align:middle; min-width:220px;" onchange="render()">
-        <option value="">All repos</option>
-        {"".join(f'<option value="{html.escape(repo)}">{html.escape(repo)}</option>' for repo in REPOSITORIES)}
-    </select>
-    <input id="repoBox" placeholder="Filter repo (text)…" oninput="render()">
+    <input id="repoBox" placeholder="Filter repo…" oninput="render()">
+
     <label>
-        <input type="checkbox" id="breakingOnly" onchange="render()" style="vertical-align:middle;">
+        <input type="checkbox" id="breakingOnly" onchange="render()">
         Show only breaking changes
     </label>
 </div>
@@ -322,21 +229,25 @@ body.dark-mode a {{
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+
 document.addEventListener("DOMContentLoaded", function() {{
 
     const commits = {json_data};
-    const ctx = document.getElementById("chart");
-    const chart = new Chart(ctx, {{
-        type: 'bar',
-        data: {{
-            labels: [],
-            datasets: [{{
-                label: "Commits",
-                data: [],
-                backgroundColor: '#0969da'
-            }}]
-        }},
-    }});
+
+    // restore theme
+    const saved = localStorage.getItem("dark-mode-enabled");
+    if (saved === "true") {{
+        document.body.classList.add("dark-mode");
+        document.documentElement.setAttribute("data-color-mode", "dark");
+    }}
+
+    window.toggleDark = function() {{
+        document.body.classList.toggle("dark-mode");
+        const isDark = document.body.classList.contains("dark-mode");
+        document.documentElement.setAttribute("data-color-mode", isDark ? "dark" : "light");
+        localStorage.setItem("dark-mode-enabled", isDark);
+        render();
+    }}
 
     function hoursAgo(dateStr) {{
         const then = new Date(dateStr);
@@ -345,82 +256,82 @@ document.addEventListener("DOMContentLoaded", function() {{
         return Math.round(diff) + " hours ago";
     }}
 
-    function updateDarkModeClasses() {{
-        // No need to toggle .dark on commit cards, just toggle .dark-mode on body and let CSS handle it
-        // This ensures all content, including text, adapts
-    }}
-
-    window.toggleDark = function() {{
-        document.body.classList.toggle("dark-mode");
-        // No need to manually update commit card classes
-    }}
+    const ctx = document.getElementById("chart");
+    const chart = new Chart(ctx, {{
+        type: "bar",
+        data: {{
+            labels: [],
+            datasets: [{{
+                label: "Commits",
+                data: []
+            }}]
+        }},
+    }});
 
     window.render = function() {{
-        const searchInput = document.getElementById("searchBox");
-        const authorInput = document.getElementById("authorBox");
-        const repoInput = document.getElementById("repoBox");
-        const repoSelect = document.getElementById("repoSelect");
-        const breakingOnly = document.getElementById("breakingOnly");
 
-        const search = searchInput ? searchInput.value.toLowerCase() : "";
-        const author = authorInput ? authorInput.value.toLowerCase() : "";
-        const repoText = repoInput ? repoInput.value.toLowerCase() : "";
-        const showBreaking = breakingOnly && breakingOnly.checked;
+        const search = (document.getElementById("searchBox").value || "").toLowerCase();
+        const author = (document.getElementById("authorBox").value || "").toLowerCase();
+        const repo = (document.getElementById("repoBox").value || "").toLowerCase();
+        const breaking = document.getElementById("breakingOnly").checked;
 
-        // Get selected repos (ignore "All repos" if nothing else selected)
-        let selectedRepos = Array.from(repoSelect.selectedOptions)
-            .map(opt => opt.value)
-            .filter(v => v); // remove empty string
-
-        let htmlContent = "";
-        const grouped = {{}};
+        let grouped = {{}};
+        let html = "";
 
         commits.forEach(c => {{
             if (search && !c.message.toLowerCase().includes(search)) return;
             if (author && !c.author.toLowerCase().includes(author)) return;
-
-            // multi-select filter (exact match, allow multiple)
-            if (selectedRepos.length && !selectedRepos.includes(c.repo)) return;
-
-            // free-text repo filter (substring match)
-            if (repoText && !c.repo.toLowerCase().includes(repoText)) return;
-
-            // breaking filter
-            if (showBreaking && !c.is_breaking) return;
+            if (repo && !c.repo.toLowerCase().includes(repo)) return;
+            if (breaking && !c.is_breaking) return;
 
             if (!grouped[c.repo]) grouped[c.repo] = [];
             grouped[c.repo].push(c);
         }});
 
         Object.keys(grouped).forEach(r => {{
-            htmlContent += "<h2>📦 " + r + "</h2>";
+            html += "<h2>📦 " + r + "</h2>";
             grouped[r].forEach(c => {{
-                let breakingBadge = "";
-                let breakingClass = "";
+
+                let badge = "";
+                let cls = "";
+
                 if (c.is_breaking) {{
-                    breakingBadge = '<span class="breaking-badge">⚠️ BREAKING</span>';
-                    breakingClass = "breaking";
+                    badge = '<span class="breaking-badge">⚠ BREAKING</span>';
+                    cls = "breaking";
                 }}
-                htmlContent += `
-                    <div class="commit ${{breakingClass}}">
-                        ${{breakingBadge}}<b>${{c.message}}</b><br>
-                        👤 ${{c.author}} — ⏰ ${{hoursAgo(c.date)}}<br>
-                        🔗 <a href="${{c.url}}" target="_blank">View commit</a>
+
+                html += `
+                    <div class="commit ${cls}">
+                        ${badge}<b>${c.message}</b><br>
+                        👤 ${c.author} — ⏰ ${hoursAgo(c.date)}<br>
+                        🔗 <a href="${c.url}" target="_blank">View commit</a>
                     </div>
                 `;
             }});
         }});
 
-        document.getElementById("commits").innerHTML = htmlContent;
+        document.getElementById("commits").innerHTML = html;
 
-        // Update chart
         const repoCounts = Object.keys(grouped).map(k => grouped[k].length);
         const labels = Object.keys(grouped);
+
         chart.data.labels = labels;
         chart.data.datasets[0].data = repoCounts;
-        chart.update();
 
-        // No need to update dark mode classes here
+        // chart dark mode
+        if (document.body.classList.contains("dark-mode")) {{
+            chart.options.scales = {{
+                x: {{ ticks: {{ color: "#c9d1d9" }} }},
+                y: {{ ticks: {{ color: "#c9d1d9" }} }}
+            }};
+        }} else {{
+            chart.options.scales = {{
+                x: {{ ticks: {{ color: "#24292f" }} }},
+                y: {{ ticks: {{ color: "#24292f" }} }}
+            }};
+        }}
+
+        chart.update();
     }}
 
     render();
