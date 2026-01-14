@@ -193,6 +193,12 @@ html_output = f"""
 <style>
 body {{
     transition: background .3s, color .3s;
+    background: #fff;
+    color: #24292f;
+}}
+body.dark-mode {{
+    background: #0d1117;
+    color: #c9d1d9;
 }}
 .container {{
     max-width: 1100px;
@@ -206,18 +212,21 @@ body {{
     margin-bottom: 10px;
     border-left: 6px solid transparent;
     background: #fff;
+    color: #24292f;
 }}
 .commit.breaking {{
     border-left: 6px solid #d73a49;
     background: #fff5f5;
 }}
-.commit.dark {{
+body.dark-mode .commit {{
     border-color: #30363d;
     background: #161b22;
+    color: #c9d1d9;
 }}
-.commit.breaking.dark {{
+body.dark-mode .commit.breaking {{
     border-left: 6px solid #f85149;
     background: #2a1618;
+    color: #c9d1d9;
 }}
 .breaking-badge {{
     display: inline-block;
@@ -237,6 +246,14 @@ body {{
     margin-bottom: 8px;
     border-radius: 6px;
     border: 1px solid #d0d7de;
+    background: #fff;
+    color: #24292f;
+}}
+body.dark-mode .controls input,
+body.dark-mode .controls select {{
+    background: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
 }}
 .controls label {{
     margin-right: 12px;
@@ -249,6 +266,19 @@ body {{
     padding: 10px;
     border-radius: 10px;
     margin-bottom: 20px;
+    background: #fff;
+    color: #24292f;
+}}
+body.dark-mode .chart-box {{
+    border-color: #30363d;
+    background: #161b22;
+    color: #c9d1d9;
+}}
+a {{
+    color: #0969da;
+}}
+body.dark-mode a {{
+    color: #58a6ff;
 }}
 </style>
 </head>
@@ -316,19 +346,13 @@ document.addEventListener("DOMContentLoaded", function() {{
     }}
 
     function updateDarkModeClasses() {{
-        // Always update all .commit and .commit.breaking elements
-        document.querySelectorAll(".commit").forEach(el => {{
-            if (document.body.classList.contains("dark-mode")) {{
-                el.classList.add("dark");
-            }} else {{
-                el.classList.remove("dark");
-            }}
-        }});
+        // No need to toggle .dark on commit cards, just toggle .dark-mode on body and let CSS handle it
+        // This ensures all content, including text, adapts
     }}
 
     window.toggleDark = function() {{
         document.body.classList.toggle("dark-mode");
-        updateDarkModeClasses();
+        // No need to manually update commit card classes
     }}
 
     window.render = function() {{
@@ -396,8 +420,7 @@ document.addEventListener("DOMContentLoaded", function() {{
         chart.data.datasets[0].data = repoCounts;
         chart.update();
 
-        // Ensure dark mode classes are applied to new elements
-        updateDarkModeClasses();
+        // No need to update dark mode classes here
     }}
 
     render();
