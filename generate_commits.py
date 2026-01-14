@@ -315,10 +315,20 @@ document.addEventListener("DOMContentLoaded", function() {{
         return Math.round(diff) + " hours ago";
     }}
 
+    function updateDarkModeClasses() {{
+        // Always update all .commit and .commit.breaking elements
+        document.querySelectorAll(".commit").forEach(el => {{
+            if (document.body.classList.contains("dark-mode")) {{
+                el.classList.add("dark");
+            }} else {{
+                el.classList.remove("dark");
+            }}
+        }});
+    }}
+
     window.toggleDark = function() {{
         document.body.classList.toggle("dark-mode");
-        document.querySelectorAll(".commit").forEach(el => el.classList.toggle("dark"));
-        document.querySelectorAll(".commit.breaking").forEach(el => el.classList.toggle("dark"));
+        updateDarkModeClasses();
     }}
 
     window.render = function() {{
@@ -385,6 +395,9 @@ document.addEventListener("DOMContentLoaded", function() {{
         chart.data.labels = labels;
         chart.data.datasets[0].data = repoCounts;
         chart.update();
+
+        // Ensure dark mode classes are applied to new elements
+        updateDarkModeClasses();
     }}
 
     render();
