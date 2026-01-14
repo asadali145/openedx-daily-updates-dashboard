@@ -9,16 +9,23 @@ The dashboard is written out as `index.html` and can be opened directly in a bro
 ## Features
 
 - Fetches commits from GitHub for the last **2 days** for a predefined list of repositories.
+- **Detects and highlights breaking changes** using three methods:
+  - **Keyword-based analysis** (e.g., "breaking", "deprecated", "removed", etc.)
+  - **Conventional Commits parser** (e.g., `feat!:` or `BREAKING CHANGE:`)
+  - **GitHub Models API (AI)** (gpt-4o-mini, free tier, if token is set)
+  - If **any** method flags a commit, it is marked as breaking.
 - Displays:
   - Commit message (first line)
   - Author
   - Time since commit
   - Link to the commit on GitHub
+  - **Red "⚠️ BREAKING" badge** for breaking changes
 - Filters:
   - **Keyword search** on commit message
   - **Author filter**
-  - **Repository dropdown filter** (exact repo match)
+  - **Repository dropdown filter** (multi-select, exact repo match)
   - **Repository free‑text filter** (substring match)
+  - **Show only breaking changes** checkbox
 - Commit list grouped by repository.
 - Simple bar chart (via Chart.js) of commit count per repository.
 - Light/dark mode toggle.
@@ -32,7 +39,7 @@ The dashboard is written out as `index.html` and can be opened directly in a bro
   ```bash
   pip install requests
   ```
-- A GitHub personal access token (recommended to avoid rate limits).
+- A GitHub personal access token (recommended to avoid rate limits and required for AI breaking change detection).
 
 ---
 
@@ -69,7 +76,8 @@ The script reads a token from the `GITHUB_TOKEN` environment variable:
 export GITHUB_TOKEN="ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-Without a token, the script will still work but may quickly hit GitHub’s unauthenticated rate limits.
+Without a token, the script will still work but may quickly hit GitHub’s unauthenticated rate limits.  
+**AI-based breaking change detection requires a token.**
 
 ---
 
@@ -87,6 +95,10 @@ If successful, this will:
 
 - Call the GitHub API for each repo in `REPOSITORIES`.
 - Collect commits from the last 2 days.
+- Analyze each commit for breaking changes using three methods:
+  - Keyword-based
+  - Conventional Commits parser
+  - GitHub Models API (if token is set)
 - Sort them (newest first).
 - Generate an `index.html` file in the same directory.
 - Print:
@@ -120,17 +132,31 @@ At the top of the page you’ll see several controls:
 - **Filter author…**  
   Free‑text search on the author’s name (case‑insensitive).
 
-- **Repo dropdown (All repos / specific repo)**  
+- **Repo dropdown (multi-select)**  
   - Default: `All repos` (no filtering by repo).
-  - Select a repo to show commits **only** from that exact repository.
+  - Select one or more repos to show commits **only** from those repositories.
 
 - **Filter repo (text)…**  
   - Free‑text repo filter; matches substrings in the repo name.
   - This is applied in addition to the dropdown.  
     - Example: if dropdown is set to `openedx/edx-platform` and text filter is `front`, you will get **no results** because both conditions must be satisfied.
 
+- **Show only breaking changes**  
+  - Check this box to display only commits flagged as breaking changes.
+
 All filters are combined with logical AND:
 - A commit must pass **all** active filters to be displayed and counted in the chart.
+
+### Breaking change detection
+
+A commit is flagged as breaking if **any** of the following methods detect it:
+- **Keyword-based**: Looks for words like "breaking", "deprecated", "removed", "incompatible", etc.
+- **Conventional Commits**: Detects `!` in the type (e.g., `feat!:`) or `BREAKING CHANGE:` in the message.
+- **AI (GitHub Models API)**: Uses the free-tier gpt-4o-mini model to analyze the commit message (if a token is set).
+
+**Visual indicator:**
+- Breaking commits have a **red left border** and a **red "⚠️ BREAKING" badge**.
+- In dark mode, the colors adapt for accessibility.
 
 ### Commit list
 
@@ -140,6 +166,7 @@ All filters are combined with logical AND:
   - Author.
   - Relative time (e.g., `3 hours ago`).
   - Link to the commit on GitHub.
+  - **"⚠️ BREAKING" badge** if flagged.
 
 ### Chart
 
@@ -163,6 +190,9 @@ All filters are combined with logical AND:
 - Uses the GitHub REST API:
   - Endpoint: `GET /repos/{owner}/{repo}/commits`
   - Only the first page of results is fetched (default page size). For very active repos, you may not see *all* commits from the last 2 days.
+- **AI-based breaking change detection**:
+  - Requires a valid `GITHUB_TOKEN` and internet access.
+  - If the API is unavailable or rate-limited, the script will skip AI detection and continue with keyword/conventional methods.
 - No server required:
   - The output is a single static `index.html` file with embedded data and JavaScript.
 
