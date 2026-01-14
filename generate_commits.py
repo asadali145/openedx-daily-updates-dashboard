@@ -49,7 +49,7 @@ json_data = json.dumps(all_commits)
 
 # ----------- HTML OUTPUT --------------
 
-html_output += """
+html_output = """
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
