@@ -239,7 +239,7 @@ body.dark-mode .chart-box {{
 <h3>🧭 Commits</h3>
 <div id="commits"></div>
 
-<p>Last generated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}</p>
+<p>Last generated: {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}</p>
 
 </div>
 
@@ -312,10 +312,10 @@ function render() {{
       const cls = c.is_breaking ? "breaking" : "";
 
       html += `
-        <div class="commit ${cls}">
-          ${badge}<b>${c.message}</b><br>
-          👤 ${c.author} — ⏰ ${hoursAgo(c.date)}<br>
-          🔗 <a href="${c.url}" target="_blank">View commit</a>
+        <div class="commit ${{cls}}">
+          ${{badge}}<b>${{c.message}}</b><br>
+          👤 ${{c.author}} — ⏰ ${{hoursAgo(c.date)}}<br>
+          🔗 <a href="${{c.url}}" target="_blank">View commit</a>
         </div>
       `;
     }});
