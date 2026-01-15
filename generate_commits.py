@@ -35,18 +35,28 @@ all_commits = []
 
 for repo in REPOSITORIES:
     url = f"https://api.github.com/repos/{repo}/commits"
-    params = {"since": since_time}
-    response = requests.get(url, headers=headers, params=params)
-    response.raise_for_status()
-
-    for commit in response.json():
-        all_commits.append({
-            "repo": repo,
-            "message": commit["commit"]["message"].split("\n")[0],
-            "author": commit["commit"]["author"]["name"],
-            "date": commit["commit"]["author"]["date"],
-            "url": commit["html_url"],
-        })
+    params = {"since": since_time, "per_page": 100}
+    page = 1
+    while True:
+        params["page"] = page
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        commits_page = response.json()
+        if not commits_page:
+            break
+        for commit in commits_page:
+            all_commits.append({
+                "repo": repo,
+                "message": commit["commit"]["message"].split("\n")[0],
+                "author": commit["commit"]["author"]["name"],
+                "date": commit["commit"]["author"]["date"],
+                "url": commit["html_url"],
+            })
+        # Check if there is a next page
+        if "Link" in response.headers and 'rel="next"' in response.headers["Link"]:
+            page += 1
+        else:
+            break
 
 
 # -------- BREAKING CHANGE ANALYSIS --------
@@ -366,9 +376,13 @@ function toggleDark() {{
 
 function hoursAgo(d) {{
   const then = new Date(d);
-  const diff = (new Date() - then) / 3600000;
-  if (diff < 1) return Math.round(diff * 60) + " minutes ago";
-  return Math.round(diff) + " hours ago";
+  const now = new Date();
+  const diffMs = now - then;
+  const diffHours = diffMs / 3600000;
+  if (diffHours < 1) return Math.round(diffHours * 60) + " minutes ago";
+  if (diffHours < 24) return Math.round(diffHours) + " hours ago";
+  const diffDays = Math.round(diffHours / 24);
+  return diffDays + " days ago";
 }}
 
 function getDateLimit() {{
