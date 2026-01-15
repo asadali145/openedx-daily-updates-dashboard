@@ -28,8 +28,8 @@ headers = {}
 if GITHUB_TOKEN:
     headers["Authorization"] = f"token {GITHUB_TOKEN}"
 
-# last 2 days
-since_time = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+# Pull commits for the last 1 month
+since_time = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
 
 all_commits = []
 
@@ -267,13 +267,19 @@ body.dark-mode .chart-box {{
 <body>
 
 <div class="container">
-<h1>🚀 Open edX commits (last 2 days)</h1>
+<h1>🚀 Open edX commits</h1>
 
 <button onclick="toggleDark()" class="btn">🌙 Toggle dark mode</button>
 
 <hr>
 
 <div class="controls">
+  <select id="dateFilter" onchange="render()" style="margin-right:6px;padding:6px 10px;border-radius:6px;border:1px solid #d0d7de;">
+    <option value="1d">Last 1 day</option>
+    <option value="2d">Last 2 days</option>
+    <option value="1w">Last 1 week</option>
+    <option value="1m" selected>Last month</option>
+  </select>
   <input id="searchBox" placeholder="Search keyword…" oninput="render()">
   <input id="authorBox" placeholder="Filter author…" oninput="render()">
 
@@ -283,7 +289,7 @@ body.dark-mode .chart-box {{
       <span style="float:right;">▼</span>
     </button>
     <div class="repo-select__dropdown" id="repoSelectDropdown" style="display:none;">
-      {"".join(f'<label><input type="checkbox" class="repo-checkbox" value="{html.escape(repo)}" checked onchange="updateRepoSelectLabel();render()"> {html.escape(repo)}</label>' for repo in REPOSITORIES)}
+      {"".join(f'<label><input type="checkbox" class="repo-checkbox" value="{html.escape(repo)}"{" checked" if repo == "openedx/edx-platform" else ""} onchange="updateRepoSelectLabel();render()"> {html.escape(repo)}</label>' for repo in REPOSITORIES)}
     </div>
   </div>
 
@@ -365,27 +371,41 @@ function hoursAgo(d) {{
   return Math.round(diff) + " hours ago";
 }}
 
+function getDateLimit() {{
+  const filter = document.getElementById("dateFilter").value;
+  const now = new Date();
+  if (filter === "1d") {{
+    return new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
+  }} else if (filter === "2d") {{
+    return new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  }} else if (filter === "1w") {{
+    return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  }} else {{
+    return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  }}
+}}
+
 function render() {{
 
   const search = (document.getElementById("searchBox")?.value || "").toLowerCase();
   const author = (document.getElementById("authorBox")?.value || "").toLowerCase();
   const repoText = (document.getElementById("repoBox")?.value || "").toLowerCase();
   const breakingOnly = document.getElementById("breakingOnly")?.checked;
-
   const repoCheckboxes = document.querySelectorAll(".repo-checkbox:checked");
   let selectedRepos = Array.from(repoCheckboxes).map(x => x.value);
+
+  const dateLimit = getDateLimit();
 
   const grouped = {{}};
 
   commits.forEach(c => {{
+    const commitDate = new Date(c.date);
 
+    if (commitDate < dateLimit) return;
     if (search && !c.message.toLowerCase().includes(search)) return;
     if (author && !c.author.toLowerCase().includes(author)) return;
-
     if (selectedRepos.length && !selectedRepos.includes(c.repo)) return;
-
     if (repoText && !c.repo.toLowerCase().includes(repoText)) return;
-
     if (breakingOnly && !c.is_breaking) return;
 
     if (!grouped[c.repo]) grouped[c.repo] = [];

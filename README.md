@@ -1,6 +1,6 @@
 # openedx-daily-updates-dashboard
 
-A small script that generates a static HTML dashboard showing the last two days of commits for a fixed list of Open edX GitHub repositories.
+A small script that generates a static HTML dashboard showing the last **one month** of commits for a fixed list of Open edX GitHub repositories.
 
 The dashboard is written out as `index.html` and can be opened directly in a browser.
 
@@ -8,7 +8,7 @@ The dashboard is written out as `index.html` and can be opened directly in a bro
 
 ## Features
 
-- Fetches commits from GitHub for the last **2 days** for a predefined list of repositories.
+- Fetches commits from GitHub for the last **1 month** for a predefined list of repositories.
 - **Detects and highlights breaking changes** using three methods:
   - **Keyword-based analysis** (e.g., "breaking", "deprecated", "removed", etc.)
   - **Conventional Commits parser** (e.g., `feat!:` or `BREAKING CHANGE:`)
@@ -26,6 +26,7 @@ The dashboard is written out as `index.html` and can be opened directly in a bro
   - **Repository dropdown filter** (multi-select, exact repo match)
   - **Repository free‑text filter** (substring match)
   - **Show only breaking changes** checkbox
+  - **Date filter** (last 1 day, 2 days, 1 week, or 1 month)
 - Commit list grouped by repository.
 - Simple bar chart (via Chart.js) of commit count per repository.
 - Light/dark mode toggle.
@@ -94,7 +95,7 @@ python generate_commits.py
 If successful, this will:
 
 - Call the GitHub API for each repo in `REPOSITORIES`.
-- Collect commits from the last 2 days.
+- Collect commits from the last **1 month**.
 - Analyze each commit for breaking changes using three methods:
   - Keyword-based
   - Conventional Commits parser
@@ -144,6 +145,9 @@ At the top of the page you’ll see several controls:
 - **Show only breaking changes**  
   - Check this box to display only commits flagged as breaking changes.
 
+- **Date filter**  
+  - Choose to view commits from the last 1 day, 2 days, 1 week, or 1 month.
+
 All filters are combined with logical AND:
 - A commit must pass **all** active filters to be displayed and counted in the chart.
 
@@ -181,15 +185,16 @@ A commit is flagged as breaking if **any** of the following methods detect it:
 
 ## Notes and limitations
 
-- Time window is fixed at **2 days**:
+- Time window is fixed at **1 month** by default:
   - Configured via:
     ```python
-    since_time = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+    since_time = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     ```
-  - You can change `days=2` if you want a different window.
+  - You can change `days=30` if you want a different window.
+  - The dashboard UI also allows filtering by 1 day, 2 days, 1 week, or 1 month.
 - Uses the GitHub REST API:
   - Endpoint: `GET /repos/{owner}/{repo}/commits`
-  - Only the first page of results is fetched (default page size). For very active repos, you may not see *all* commits from the last 2 days.
+  - Only the first page of results is fetched (default page size). For very active repos, you may not see *all* commits from the last month.
 - **AI-based breaking change detection**:
   - Requires a valid `GITHUB_TOKEN` and internet access.
   - If the API is unavailable or rate-limited, the script will skip AI detection and continue with keyword/conventional methods.
