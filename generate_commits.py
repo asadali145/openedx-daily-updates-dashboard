@@ -208,6 +208,10 @@ body.dark-mode .controls select {{
   background: #fff !important;
   color: #24292f !important;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
 }}
 
 body.dark-mode .repo-select__button {{
@@ -332,8 +336,10 @@ function updateRepoSelectLabel() {{
     label = "No repositories";
   }} else if (checked.length === all) {{
     label = "All repositories";
-  }} else {{
+  }} else if (checked.length <= 3) {{
     label = checked.map(x => x.value).join(", ");
+  }} else {{
+    label = checked.length + " repositories selected";
   }}
   document.getElementById("repoSelectLabel").textContent = label;
 }}
