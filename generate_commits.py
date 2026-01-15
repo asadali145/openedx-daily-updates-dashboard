@@ -65,6 +65,7 @@ def analyze_breaking_changes(commits):
         "incompatible",
         "migration required",
         "no longer supports",
+        "remove",
     ]
     KEYWORDS = [k.lower() for k in KEYWORDS]
 
@@ -191,6 +192,29 @@ body.dark-mode .controls select {{
   border: 1px solid #30363d !important;
 }}
 
+.repo-checkboxes {{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #ffffff !important;
+}}
+
+body.dark-mode .repo-checkboxes {{
+  border-color: #30363d !important;
+  background: #161b22 !important;
+}}
+
+.repo-checkboxes label {{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}}
+
 .chart-box {{
   border: 1px solid #d0d7de;
   padding: 10px;
@@ -218,10 +242,9 @@ body.dark-mode .chart-box {{
   <input id="searchBox" placeholder="Search keyword…" oninput="render()">
   <input id="authorBox" placeholder="Filter author…" oninput="render()">
 
-  <select id="repoSelect" multiple size="4" onchange="render()">
-    <option value="">All repos</option>
-    {"".join(f'<option value="{html.escape(repo)}">{html.escape(repo)}</option>' for repo in REPOSITORIES)}
-  </select>
+  <div class="repo-checkboxes" id="repoCheckboxes">
+    {"".join(f'<label><input type="checkbox" class="repo-checkbox" value="{html.escape(repo)}" checked onchange="render()"> {html.escape(repo)}</label>' for repo in REPOSITORIES)}
+  </div>
 
   <input id="repoBox" placeholder="Repo contains…" oninput="render()">
 
@@ -277,8 +300,8 @@ function render() {{
   const repoText = (document.getElementById("repoBox")?.value || "").toLowerCase();
   const breakingOnly = document.getElementById("breakingOnly")?.checked;
 
-  const repoSelect = document.getElementById("repoSelect");
-  let selectedRepos = Array.from(repoSelect.selectedOptions).map(x => x.value).filter(x => x);
+  const repoCheckboxes = document.querySelectorAll(".repo-checkbox:checked");
+  let selectedRepos = Array.from(repoCheckboxes).map(x => x.value);
 
   const grouped = {{}};
 

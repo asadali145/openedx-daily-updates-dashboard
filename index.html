@@ -83,6 +83,29 @@ body.dark-mode .controls select {
   border: 1px solid #30363d !important;
 }
 
+.repo-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #ffffff !important;
+}
+
+body.dark-mode .repo-checkboxes {
+  border-color: #30363d !important;
+  background: #161b22 !important;
+}
+
+.repo-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
 .chart-box {
   border: 1px solid #d0d7de;
   padding: 10px;
@@ -110,10 +133,9 @@ body.dark-mode .chart-box {
   <input id="searchBox" placeholder="Search keyword…" oninput="render()">
   <input id="authorBox" placeholder="Filter author…" oninput="render()">
 
-  <select id="repoSelect" multiple size="4" onchange="render()">
-    <option value="">All repos</option>
-    <option value="openedx/edx-platform">openedx/edx-platform</option><option value="openedx/frontend-app-learning">openedx/frontend-app-learning</option><option value="openedx/frontend-app-authoring">openedx/frontend-app-authoring</option><option value="openedx/frontend-app-discussions">openedx/frontend-app-discussions</option><option value="openedx/XBlock">openedx/XBlock</option><option value="openedx/paragon">openedx/paragon</option><option value="openedx/edx-celeryutils">openedx/edx-celeryutils</option><option value="openedx/frontend-base">openedx/frontend-base</option><option value="openedx/frontend-app-ora">openedx/frontend-app-ora</option><option value="openedx/frontend-platform">openedx/frontend-platform</option><option value="openedx/frontend-plugin-framework">openedx/frontend-plugin-framework</option><option value="openedx/frontend-app-gradebook">openedx/frontend-app-gradebook</option>
-  </select>
+  <div class="repo-checkboxes" id="repoCheckboxes">
+    <label><input type="checkbox" class="repo-checkbox" value="openedx/edx-platform" checked onchange="render()"> openedx/edx-platform</label><label><input type="checkbox" class="repo-checkbox" value="openedx/frontend-app-learning" checked onchange="render()"> openedx/frontend-app-learning</label><label><input type="checkbox" class="repo-checkbox" value="openedx/frontend-app-authoring" checked onchange="render()"> openedx/frontend-app-authoring</label><label><input type="checkbox" class="repo-checkbox" value="openedx/frontend-app-discussions" checked onchange="render()"> openedx/frontend-app-discussions</label><label><input type="checkbox" class="repo-checkbox" value="openedx/XBlock" checked onchange="render()"> openedx/XBlock</label><label><input type="checkbox" class="repo-checkbox" value="openedx/paragon" checked onchange="render()"> openedx/paragon</label><label><input type="checkbox" class="repo-checkbox" value="openedx/edx-celeryutils" checked onchange="render()"> openedx/edx-celeryutils</label><label><input type="checkbox" class="repo-checkbox" value="openedx/frontend-base" checked onchange="render()"> openedx/frontend-base</label><label><input type="checkbox" class="repo-checkbox" value="openedx/frontend-app-ora" checked onchange="render()"> openedx/frontend-app-ora</label><label><input type="checkbox" class="repo-checkbox" value="openedx/frontend-platform" checked onchange="render()"> openedx/frontend-platform</label><label><input type="checkbox" class="repo-checkbox" value="openedx/frontend-plugin-framework" checked onchange="render()"> openedx/frontend-plugin-framework</label><label><input type="checkbox" class="repo-checkbox" value="openedx/frontend-app-gradebook" checked onchange="render()"> openedx/frontend-app-gradebook</label>
+  </div>
 
   <input id="repoBox" placeholder="Repo contains…" oninput="render()">
 
@@ -131,7 +153,7 @@ body.dark-mode .chart-box {
 <h3>🧭 Commits</h3>
 <div id="commits"></div>
 
-<p>Last generated: 2026-01-15 06:28 UTC</p>
+<p>Last generated: 2026-01-15 07:30 UTC</p>
 
 </div>
 
@@ -139,7 +161,7 @@ body.dark-mode .chart-box {
 
 <script>
 
-const commits = [{"repo": "openedx/edx-platform", "message": "fix: remove the branch/version while building BS (#37866)", "author": "Muhammad Arslan", "date": "2026-01-15T01:26:45Z", "url": "https://github.com/openedx/edx-platform/commit/328b3ee3fa00c507e25aec72b0e8a34195d54724", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37881 from openedx/feanil/make_upgrade", "author": "Feanil Patel", "date": "2026-01-14T23:37:01Z", "url": "https://github.com/openedx/edx-platform/commit/e1fb2d843b20b4e2302fb624690ee66bf704e135", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37872 from openedx/feanil/update_gitignore", "author": "Feanil Patel", "date": "2026-01-14T15:31:15Z", "url": "https://github.com/openedx/edx-platform/commit/bac5e7efc623be20c4bd516979c1c2a1b6b876ec", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37874 from openedx/feanil/remove_unused_bad_code", "author": "Feanil Patel", "date": "2026-01-14T15:26:03Z", "url": "https://github.com/openedx/edx-platform/commit/3dec1abcc9dbde1123e052af313c4c004209afd2", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "fix: Pass in a referrer when logging.", "author": "Feanil Patel", "date": "2026-01-14T15:23:12Z", "url": "https://github.com/openedx/edx-platform/commit/a5f022a1cd892fd4b8665149159f6b89b50c7081", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Revert \"refactor: hoist annotations for common settings with differing values\u2026\" (#37883)", "author": "Ahtisham Shahid", "date": "2026-01-14T15:08:04Z", "url": "https://github.com/openedx/edx-platform/commit/d71d46e313be79514114dc1b865795f8d896e249", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "fix: celery issue with eta/countdown affecting grading", "author": "David Ormsbee", "date": "2026-01-14T03:58:39Z", "url": "https://github.com/openedx/edx-platform/commit/3430dbd0503395e8ffb9dbcbd278622a7cd1a450", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37878 from openedx/feanil/update_readme_python_version", "author": "Feanil Patel", "date": "2026-01-13T21:38:20Z", "url": "https://github.com/openedx/edx-platform/commit/aea900061aaa8a098801d1b01484f999ee9b355a", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "docs: Apply suggestion from @kdmccormick", "author": "Feanil Patel", "date": "2026-01-13T19:17:59Z", "url": "https://github.com/openedx/edx-platform/commit/6062c04e8aefb48fe3d5a4d44b2294e0d7169d86", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37879 from irfanuddinahmad/iahmad/ENT-10552", "author": "irfanuddinahmad", "date": "2026-01-13T16:40:40Z", "url": "https://github.com/openedx/edx-platform/commit/e6deac0cf12226c0b8d744ad17395373cfe0de03", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "build: Constrain sphinx-autoapi to fix make upgrade", "author": "Feanil Patel", "date": "2026-01-13T16:15:16Z", "url": "https://github.com/openedx/edx-platform/commit/99684cb7f19a831291a33b5c59f140a20edd3a7a", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "chore: updated version of enterprise-integrated-channels", "author": "irfanuddinahmad", "date": "2026-01-13T15:56:17Z", "url": "https://github.com/openedx/edx-platform/commit/6e59e0f248a04b25f978243cfcc681cbab4a9805", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Removed DEFAULT_HASHING_ALGORITHM from lms (#37820)", "author": "jawad khan", "date": "2026-01-13T13:13:52Z", "url": "https://github.com/openedx/edx-platform/commit/99e7492b5e5a0b65f739f02119a27c0ae922567b", "is_breaking": true, "breaking_methods": ["keyword"]}];
+const commits = [{"repo": "openedx/edx-platform", "message": "fix: remove the branch/version while building BS (#37866)", "author": "Muhammad Arslan", "date": "2026-01-15T01:26:45Z", "url": "https://github.com/openedx/edx-platform/commit/328b3ee3fa00c507e25aec72b0e8a34195d54724", "is_breaking": true, "breaking_methods": ["keyword"]}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37881 from openedx/feanil/make_upgrade", "author": "Feanil Patel", "date": "2026-01-14T23:37:01Z", "url": "https://github.com/openedx/edx-platform/commit/e1fb2d843b20b4e2302fb624690ee66bf704e135", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37872 from openedx/feanil/update_gitignore", "author": "Feanil Patel", "date": "2026-01-14T15:31:15Z", "url": "https://github.com/openedx/edx-platform/commit/bac5e7efc623be20c4bd516979c1c2a1b6b876ec", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37874 from openedx/feanil/remove_unused_bad_code", "author": "Feanil Patel", "date": "2026-01-14T15:26:03Z", "url": "https://github.com/openedx/edx-platform/commit/3dec1abcc9dbde1123e052af313c4c004209afd2", "is_breaking": true, "breaking_methods": ["keyword"]}, {"repo": "openedx/edx-platform", "message": "fix: Pass in a referrer when logging.", "author": "Feanil Patel", "date": "2026-01-14T15:23:12Z", "url": "https://github.com/openedx/edx-platform/commit/a5f022a1cd892fd4b8665149159f6b89b50c7081", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Revert \"refactor: hoist annotations for common settings with differing values\u2026\" (#37883)", "author": "Ahtisham Shahid", "date": "2026-01-14T15:08:04Z", "url": "https://github.com/openedx/edx-platform/commit/d71d46e313be79514114dc1b865795f8d896e249", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "fix: celery issue with eta/countdown affecting grading", "author": "David Ormsbee", "date": "2026-01-14T03:58:39Z", "url": "https://github.com/openedx/edx-platform/commit/3430dbd0503395e8ffb9dbcbd278622a7cd1a450", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37878 from openedx/feanil/update_readme_python_version", "author": "Feanil Patel", "date": "2026-01-13T21:38:20Z", "url": "https://github.com/openedx/edx-platform/commit/aea900061aaa8a098801d1b01484f999ee9b355a", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "docs: Apply suggestion from @kdmccormick", "author": "Feanil Patel", "date": "2026-01-13T19:17:59Z", "url": "https://github.com/openedx/edx-platform/commit/6062c04e8aefb48fe3d5a4d44b2294e0d7169d86", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Merge pull request #37879 from irfanuddinahmad/iahmad/ENT-10552", "author": "irfanuddinahmad", "date": "2026-01-13T16:40:40Z", "url": "https://github.com/openedx/edx-platform/commit/e6deac0cf12226c0b8d744ad17395373cfe0de03", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "build: Constrain sphinx-autoapi to fix make upgrade", "author": "Feanil Patel", "date": "2026-01-13T16:15:16Z", "url": "https://github.com/openedx/edx-platform/commit/99684cb7f19a831291a33b5c59f140a20edd3a7a", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "chore: updated version of enterprise-integrated-channels", "author": "irfanuddinahmad", "date": "2026-01-13T15:56:17Z", "url": "https://github.com/openedx/edx-platform/commit/6e59e0f248a04b25f978243cfcc681cbab4a9805", "is_breaking": false, "breaking_methods": []}, {"repo": "openedx/edx-platform", "message": "Removed DEFAULT_HASHING_ALGORITHM from lms (#37820)", "author": "jawad khan", "date": "2026-01-13T13:13:52Z", "url": "https://github.com/openedx/edx-platform/commit/99e7492b5e5a0b65f739f02119a27c0ae922567b", "is_breaking": true, "breaking_methods": ["keyword"]}];
 
 let chart = null;
 
@@ -169,8 +191,8 @@ function render() {
   const repoText = (document.getElementById("repoBox")?.value || "").toLowerCase();
   const breakingOnly = document.getElementById("breakingOnly")?.checked;
 
-  const repoSelect = document.getElementById("repoSelect");
-  let selectedRepos = Array.from(repoSelect.selectedOptions).map(x => x.value).filter(x => x);
+  const repoCheckboxes = document.querySelectorAll(".repo-checkbox:checked");
+  let selectedRepos = Array.from(repoCheckboxes).map(x => x.value);
 
   const grouped = {};
 
