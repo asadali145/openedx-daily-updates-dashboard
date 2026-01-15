@@ -192,27 +192,58 @@ body.dark-mode .controls select {{
   border: 1px solid #30363d !important;
 }}
 
-.repo-checkboxes {{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 8px;
+.repo-select {{
+  position: relative;
+  display: inline-block;
+  min-width: 300px;
   margin: 10px 0;
-  padding: 10px;
+}}
+
+.repo-select__button {{
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
-  background: #ffffff !important;
+  background: #fff !important;
+  color: #24292f !important;
+  cursor: pointer;
 }}
 
-body.dark-mode .repo-checkboxes {{
-  border-color: #30363d !important;
+body.dark-mode .repo-select__button {{
   background: #161b22 !important;
+  color: #c9d1d9 !important;
+  border: 1px solid #30363d !important;
 }}
 
-.repo-checkboxes label {{
+.repo-select__dropdown {{
+  position: absolute;
+  z-index: 1000;
+  background: #fff !important;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  margin-top: 2px;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}}
+
+body.dark-mode .repo-select__dropdown {{
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
+}}
+
+.repo-select__dropdown label {{
   display: flex;
   align-items: center;
-  gap: 6px;
+  padding: 6px 12px;
   cursor: pointer;
+  gap: 8px;
+}}
+
+.repo-select__dropdown input[type="checkbox"] {{
+  margin-right: 8px;
 }}
 
 .chart-box {{
@@ -242,8 +273,14 @@ body.dark-mode .chart-box {{
   <input id="searchBox" placeholder="Search keyword…" oninput="render()">
   <input id="authorBox" placeholder="Filter author…" oninput="render()">
 
-  <div class="repo-checkboxes" id="repoCheckboxes">
-    {"".join(f'<label><input type="checkbox" class="repo-checkbox" value="{html.escape(repo)}" checked onchange="render()"> {html.escape(repo)}</label>' for repo in REPOSITORIES)}
+  <div class="repo-select" id="repoSelect">
+    <button type="button" class="repo-select__button" id="repoSelectBtn" onclick="toggleRepoDropdown()">
+      <span id="repoSelectLabel">All repositories</span>
+      <span style="float:right;">▼</span>
+    </button>
+    <div class="repo-select__dropdown" id="repoSelectDropdown" style="display:none;">
+      {"".join(f'<label><input type="checkbox" class="repo-checkbox" value="{html.escape(repo)}" checked onchange="updateRepoSelectLabel();render()"> {html.escape(repo)}</label>' for repo in REPOSITORIES)}
+    </div>
   </div>
 
   <input id="repoBox" placeholder="Repo contains…" oninput="render()">
@@ -269,10 +306,39 @@ body.dark-mode .chart-box {{
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-
 const commits = {json_data};
 
 let chart = null;
+
+// --- Repo select dropdown logic ---
+function toggleRepoDropdown() {{
+  const dropdown = document.getElementById("repoSelectDropdown");
+  dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+}}
+
+function closeRepoDropdownOnClickOutside(e) {{
+  const select = document.getElementById("repoSelect");
+  if (!select.contains(e.target)) {{
+    document.getElementById("repoSelectDropdown").style.display = "none";
+  }}
+}}
+document.addEventListener("mousedown", closeRepoDropdownOnClickOutside);
+
+function updateRepoSelectLabel() {{
+  const checked = Array.from(document.querySelectorAll(".repo-checkbox:checked"));
+  const all = document.querySelectorAll(".repo-checkbox").length;
+  let label = "";
+  if (checked.length === 0) {{
+    label = "No repositories";
+  }} else if (checked.length === all) {{
+    label = "All repositories";
+  }} else {{
+    label = checked.map(x => x.value).join(", ");
+  }}
+  document.getElementById("repoSelectLabel").textContent = label;
+}}
+
+// --- End repo select dropdown logic ---
 
 function toggleDark() {{
   document.body.classList.toggle("dark-mode");
@@ -367,6 +433,7 @@ function render() {{
 
 }}
 
+updateRepoSelectLabel();
 render();
 
 </script>
